@@ -16,6 +16,15 @@ impl Outcome {
             Outcome::Loss => 0,
         }
     }
+
+    fn from_move(move_str: &str) -> Option<Self> {
+        match move_str {
+            "X" => Some(Outcome::Loss),
+            "Y" => Some(Outcome::Draw),
+            "Z" => Some(Outcome::Win),
+            &_ => None,
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -54,6 +63,28 @@ struct Round {
 }
 
 impl Round {
+    fn from_outcome(opponent: Shape, outcome: Outcome) -> Self {
+        let response = match outcome {
+            Outcome::Win => match opponent {
+                Shape::Rock => Shape::Paper,
+                Shape::Paper => Shape::Scissors,
+                Shape::Scissors => Shape::Rock,
+            },
+            Outcome::Draw => match opponent {
+                Shape::Rock => Shape::Rock,
+                Shape::Paper => Shape::Paper,
+                Shape::Scissors => Shape::Scissors,
+            },
+            Outcome::Loss => match opponent {
+                Shape::Rock => Shape::Scissors,
+                Shape::Paper => Shape::Rock,
+                Shape::Scissors => Shape::Paper,
+            },
+        };
+
+        Self { opponent, response }
+    }
+
     /// TODO: clean this up, can we implement comparison on Shape?
     fn outcome(&self) -> Outcome {
         match self.response {
@@ -80,7 +111,7 @@ impl Round {
     }
 }
 
-fn parse_rounds<R: BufRead>(reader: &mut R) -> Vec<Round> {
+fn parse_rounds<R: BufRead>(reader: &mut R, is_part_one: bool) -> Vec<Round> {
     let mut rounds: Vec<Round> = Vec::new();
 
     for line in reader.lines() {
@@ -94,12 +125,22 @@ fn parse_rounds<R: BufRead>(reader: &mut R) -> Vec<Round> {
             None => continue,
         };
 
-        let response = match Shape::from_move(moves[1]) {
-            Some(x) => x,
-            None => continue,
-        };
+        let round: Round;
+        if is_part_one {
+            let response = match Shape::from_move(moves[1]) {
+                Some(x) => x,
+                None => continue,
+            };
 
-        let round = Round { opponent, response };
+            round = Round { opponent, response };
+        } else {
+            let outcome = match Outcome::from_move(moves[1]) {
+                Some(x) => x,
+                None => continue,
+            };
+
+            round = Round::from_outcome(opponent, outcome);
+        }
 
         rounds.push(round);
     }
@@ -109,7 +150,7 @@ fn parse_rounds<R: BufRead>(reader: &mut R) -> Vec<Round> {
 
 fn main() {
     let mut reader = io::stdin().lock(); // StdinLock implements BufRead
-    let rounds = parse_rounds(&mut reader);
+    let rounds = parse_rounds(&mut reader, false);
 
     let mut score = 0;
     for round in rounds {
