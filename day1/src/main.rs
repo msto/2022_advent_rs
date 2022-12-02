@@ -33,17 +33,18 @@ fn parse_totals<R: BufRead>(reader: &mut R) -> Vec<u32> {
     totals
 }
 
-fn part1(totals: &Vec<u32>) {
-    println!("Part 1: {}", totals.iter().max().unwrap());
+/// Report the maximum calories carried by a single elf
+/// (aka unpack and dereference the max of a Vector)
+fn max_total(totals: &Vec<u32>) -> u32 {
+    *totals.iter().max().unwrap()
 }
 
-fn part2(totals: &mut Vec<u32>) {
+/// Report the total calories carried by the elves with the three highest loads
+fn top3_total(totals: &mut Vec<u32>) -> u32 {
     totals.sort();
     totals.reverse();
 
-    let total: u32 = totals[..3].iter().sum();
-
-    println!("Part 2: {}", total);
+    totals[..3].iter().sum()
 }
 
 fn main() {
@@ -51,6 +52,6 @@ fn main() {
     let mut reader = io::stdin().lock(); // StdinLock implements BufRead
     let mut totals = parse_totals(&mut reader);
 
-    part1(&totals);
-    part2(&mut totals);
+    println!("Part 1: {}", max_total(&totals));
+    println!("Part 2: {}", top3_total(&mut totals));
 }
