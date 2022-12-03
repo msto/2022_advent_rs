@@ -80,8 +80,13 @@ fn main() {
     let mut reader = io::stdin().lock();
     let rucksacks = parse_rucksacks(&mut reader);
 
-    let total_priority = 0;
-    for rucksack in rucksacks {}
+    let mut total_priority = 0;
+    for rucksack in rucksacks {
+        let shared_key = find_shared_key(&rucksack.compartment1, &rucksack.compartment2).unwrap();
+        total_priority += priority(shared_key);
+    }
+
+    println!("Total priority: {}", total_priority);
 }
 
 #[cfg(test)]
