@@ -79,6 +79,9 @@ fn parse_rucksacks<R: BufRead>(reader: &mut R) -> Vec<Rucksack> {
 fn main() {
     let mut reader = io::stdin().lock();
     let rucksacks = parse_rucksacks(&mut reader);
+
+    let total_priority = 0;
+    for rucksack in rucksacks {}
 }
 
 #[cfg(test)]
@@ -115,5 +118,15 @@ mod tests {
 
         let shared_key = find_shared_key(&m1, &m2);
         assert_eq!(shared_key, Some('b'));
+    }
+
+    #[test]
+    fn test_rucksack_from_contents() {
+        let mut rucksack = Rucksack::from_contents("ABABDEAB");
+
+        assert_eq!(*rucksack.compartment1.entry('A').or_default(), 2);
+        assert_eq!(*rucksack.compartment1.entry('B').or_default(), 2);
+        assert_eq!(*rucksack.compartment2.entry('A').or_default(), 1);
+        assert_eq!(*rucksack.compartment2.entry('D').or_default(), 1);
     }
 }
