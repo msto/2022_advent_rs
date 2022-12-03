@@ -47,6 +47,19 @@ fn string_to_hashmap(s: &str) -> HashMap<char, u32> {
     map
 }
 
+// Find shared key between two maps.
+// Assumes only key is shared and reports the first found.
+// TODO: make generic
+fn find_shared_key(m1: &HashMap<char, u32>, m2: &HashMap<char, u32>) -> Option<char> {
+    for (key, _) in m1 {
+        if m2.contains_key(key) {
+            return Some(*key);
+        }
+    }
+
+    None
+}
+
 fn parse_rucksacks<R: BufRead>(reader: &mut R) -> Vec<Rucksack> {
     let mut rucksacks = Vec::new();
 
@@ -88,5 +101,19 @@ mod tests {
         assert_eq!(priority('z'), 26);
         assert_eq!(priority('A'), 27);
         assert_eq!(priority('Z'), 52);
+    }
+
+    #[test]
+    fn test_find_shared_key() {
+        let mut m1 = HashMap::new();
+        m1.insert('a', 1);
+        m1.insert('b', 1);
+
+        let mut m2 = HashMap::new();
+        m2.insert('c', 1);
+        m2.insert('b', 1);
+
+        let shared_key = find_shared_key(&m1, &m2);
+        assert_eq!(shared_key, Some('b'));
     }
 }
