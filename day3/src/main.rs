@@ -20,6 +20,21 @@ impl Rucksack {
     }
 }
 
+/// Compute "priority" of an item (ascii value - offset)
+fn priority(c: char) -> u32 {
+    if !c.is_ascii_alphabetic() {
+        panic!("only lower and uppercase letters permitted.")
+    }
+
+    // problem formulated to have different offsets for lower/upper
+    // a..z = 1..26; A..Z = 27..52
+    if c.is_ascii_uppercase() {
+        (c as u32) - 38
+    } else {
+        (c as u32) - 96
+    }
+}
+
 /// Count character instances in a string.
 fn string_to_hashmap(s: &str) -> HashMap<char, u32> {
     let mut map = HashMap::new();
@@ -65,5 +80,13 @@ mod tests {
         // i.e. .entry() vs .get()
         assert_eq!(*map.entry('a').or_default(), 2);
         assert_eq!(*map.entry('d').or_default(), 1);
+    }
+
+    #[test]
+    fn test_priority() {
+        assert_eq!(priority('a'), 1);
+        assert_eq!(priority('z'), 26);
+        assert_eq!(priority('A'), 27);
+        assert_eq!(priority('Z'), 52);
     }
 }
