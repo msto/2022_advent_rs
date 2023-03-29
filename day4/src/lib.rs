@@ -21,6 +21,13 @@ pub fn either_contains(r1: &Range<i32>, r2: &Range<i32>) -> bool {
     is_contained(r1, r2) || is_contained(r2, r1)
 }
 
+pub fn overlaps(r1: &Range<i32>, r2: &Range<i32>) -> bool {
+    r1.contains(&r2.start)
+        || r1.contains(&(&r2.end - 1))
+        || r2.contains(&r1.start)
+        || r2.contains(&(&r1.end - 1))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

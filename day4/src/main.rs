@@ -31,10 +31,12 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         .lines()
         .filter_map(|x| x.ok())
         .map(|line| day4::parse_ranges(&(line)))
-        .filter(|x| day4::either_contains(&x[0], &x[1]))
+        // .filter(|x| day4::either_contains(&x[0], &x[1]))
+        .filter(|x| day4::overlaps(&x[0], &x[1]))
         .count();
 
-    println!("{} pairs fully overlap", n_overlap);
+    // println!("{} pairs fully overlap", n_overlap);
+    println!("{} pairs partially overlap", n_overlap);
 
     Ok(())
 }
