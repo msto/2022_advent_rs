@@ -69,6 +69,8 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         let mv = day5::parse_move(&line.unwrap());
 
         if args.part2 {
+            // move crates as a stack
+            // TODO: find a way to concatenate VecDeques
             let bottom = stacks[mv.src].split_off(mv.n);
             for _ in 0..mv.n {
                 let c = stacks[mv.src].pop_back().unwrap();
@@ -76,6 +78,7 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
             }
             stacks[mv.src] = bottom;
         } else {
+            // move crates one at a time
             for _ in 0..mv.n {
                 let c = stacks[mv.src].pop_front().unwrap();
                 stacks[mv.dst].push_front(c);
@@ -85,12 +88,6 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
 
     // Print first/top crate/character in each stack
     println!("{}", stacks.into_iter().map(|x| x[0]).collect::<String>());
-
-    // for stack in stacks {
-    // println!("{}", stack.into_iter().collect::<String>());
-    // }
-
-    // println!("{}", lines.next().unwrap()?);
 
     Ok(())
 }
