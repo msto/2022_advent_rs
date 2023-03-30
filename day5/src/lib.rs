@@ -28,8 +28,8 @@ pub fn parse_move(line: &str) -> Move {
 
     Move {
         n: data[0],
-        src: data[1],
-        dst: data[2],
+        src: data[1] - 1,
+        dst: data[2] - 1,
     }
 }
 
@@ -55,7 +55,7 @@ mod tests {
         let mv = parse_move(line);
 
         assert_eq!(mv.n, 1);
-        assert_eq!(mv.src, 3);
-        assert_eq!(mv.dst, 5);
+        assert_eq!(mv.src, 2);
+        assert_eq!(mv.dst, 4);
     }
 }
