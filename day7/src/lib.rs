@@ -7,17 +7,17 @@ use std::{
     rc::Rc,
 };
 
-enum FsNode {
-    Dir {
-        name: String,
-        contents: HashMap<String, Rc<FsNode>>,
-        parent: Option<Rc<FsNode>>,
-    },
-    File {
-        name: String,
-        size: usize,
-        parent: Option<Rc<FsNode>>,
-    },
+enum FsNodeType {
+    Dir,
+    File,
+}
+
+struct FsNode {
+    kind: FsNodeType,
+    name: String,
+    dsize: usize,
+    parent: Option<Rc<FsNode>>,
+    contents: Option<HashMap<String, Rc<FsNode>>>,
 }
 
 fn parse_node(line: &str, curr_dir: Option<Rc<FsNode>>) -> FsNode {
@@ -25,18 +25,28 @@ fn parse_node(line: &str, curr_dir: Option<Rc<FsNode>>) -> FsNode {
     let dtype = data.next().unwrap();
     let name = data.next().unwrap();
 
-    if line.starts_with("dir ") {
-        FsNode::Dir {
-            name: name.to_string(),
-            contents: HashMap::new(),
-            parent: curr_dir,
-        }
+    let kind = if line.starts_with("dir ") {
+        FsNodeType::Dir
     } else {
-        FsNode::File {
-            name: name.to_string(),
-            size: dtype.parse::<usize>().unwrap(),
-            parent: curr_dir,
-        }
+        FsNodeType::File
+    };
+
+    let dsize = match kind {
+        FsNodeType::Dir => 0,
+        FsNodeType::File => dtype.parse::<usize>().unwrap(),
+    };
+
+    let contents = match kind {
+        FsNodeType::Dir => Some(HashMap::new()),
+        FsNodeType::File => None,
+    };
+
+    FsNode {
+        kind: kind,
+        name: name.to_string(),
+        dsize: dsize,
+        parent: curr_dir,
+        contents: contents,
     }
 }
 
@@ -58,35 +68,6 @@ pub fn get_args() -> Result<Args, Box<dyn Error>> {
 pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
     let fin = open(&args.fin)?;
     let mut lines = fin.lines().filter_map(|x| x.ok());
-
-    // skip cd to root
-    lines.next();
-    let mut root = FsNode::Dir {
-        name: "/".to_string(),
-        contents: HashMap::new(),
-        parent: None,
-    };
-
-    let mut curr_dir = Rc::new(root);
-
-    for line in lines {
-        if line.starts_with("$") {
-            continue;
-        }
-
-        let node = parse_node(&line, Some(Rc::clone(&curr_dir)));
-
-        // if line.starts_with("$ cd") {
-        //     let name = line.trim_start_matches("$ cd ");
-        //     curr_dir = FsEntry::Dir {
-        //         name: name.to_string(),
-        //         contents: HashMap::new(),
-        //     };
-        //     curr_tree.push(curr_dir);
-        // } else if line.starts_with("$ ls") {
-        // } else {
-        // }
-    }
 
     Ok(())
 }
@@ -110,20 +91,12 @@ mod tests {
         let line = "dir abc";
         let node = parse_node(&line, None);
 
-        assert!(matches!(node, FsNode::Dir { .. }));
-
-        match node {
-            FsNode::Dir {
-                name,
-                contents,
-                parent,
-            } => {
-                assert_eq!(name, "abc");
-                assert_eq!(contents.len(), 0);
-                assert!(parent.is_none());
-            }
-            FsNode::File { .. } => {}
-        };
+        assert!(matches!(node.kind, FsNodeType::Dir));
+        assert_eq!(node.name, "abc");
+        assert_eq!(node.dsize, 0);
+        assert!(node.parent.is_none());
+        assert!(node.contents.is_some());
+        assert!(node.contents.unwrap().len() == 0);
     }
 
     #[test]
@@ -131,15 +104,10 @@ mod tests {
         let line = "123 def";
         let node = parse_node(&line, None);
 
-        assert!(matches!(node, FsNode::File { .. }));
-
-        match node {
-            FsNode::File { name, size, parent } => {
-                assert_eq!(name, "def");
-                assert_eq!(size, 123);
-                assert!(parent.is_none());
-            }
-            FsNode::Dir { .. } => {}
-        };
+        assert!(matches!(node.kind, FsNodeType::File));
+        assert_eq!(node.name, "def");
+        assert_eq!(node.dsize, 123);
+        assert!(node.parent.is_none());
+        assert!(node.contents.is_none());
     }
 }
