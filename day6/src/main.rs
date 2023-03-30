@@ -31,7 +31,12 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
     let mut lines = open(&args.fin)?.lines();
     let buffer = lines.next().unwrap()?;
 
-    let marker_pos = day6::find_marker(&buffer);
+    let marker_pos: usize;
+    if args.part2 {
+        marker_pos = day6::find_marker(&buffer, 14);
+    } else {
+        marker_pos = day6::find_marker(&buffer, 4);
+    }
 
     println!("First marker appears after character {}", marker_pos);
 
