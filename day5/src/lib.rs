@@ -13,9 +13,9 @@ pub fn parse_crates(line: &str) -> Vec<Option<char>> {
 }
 
 pub struct Move {
-    n: usize,
-    src: usize,
-    dst: usize,
+    pub n: usize,
+    pub src: usize,
+    pub dst: usize,
 }
 
 pub fn parse_move(line: &str) -> Move {
