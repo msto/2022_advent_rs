@@ -17,6 +17,13 @@ fn main() {
 pub struct Args {
     #[arg(help = "Input file", id = "FILE", default_value = "-")]
     fin: String,
+
+    #[arg(
+        long = "part2",
+        help = "Use part2 logic (move crates as stack)",
+        default_value_t = false
+    )]
+    part2: bool,
 }
 
 fn get_args() -> Result<Args, Box<dyn Error>> {
@@ -61,9 +68,18 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
     for line in lines {
         let mv = day5::parse_move(&line.unwrap());
 
-        for _ in 0..mv.n {
-            let c = stacks[mv.src].pop_front().unwrap();
-            stacks[mv.dst].push_front(c);
+        if args.part2 {
+            let bottom = stacks[mv.src].split_off(mv.n);
+            for _ in 0..mv.n {
+                let c = stacks[mv.src].pop_back().unwrap();
+                stacks[mv.dst].push_front(c);
+            }
+            stacks[mv.src] = bottom;
+        } else {
+            for _ in 0..mv.n {
+                let c = stacks[mv.src].pop_front().unwrap();
+                stacks[mv.dst].push_front(c);
+            }
         }
     }
 
