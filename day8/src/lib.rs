@@ -24,12 +24,67 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
     let fin = open(&args.fin)?;
     // let mut lines = fin.lines().filter_map(|x| x.ok());
 
-    let x = fin
+    let heights = fin
         .lines()
         .map(|line| line_to_values(line.unwrap()))
         .collect::<Vec<_>>();
 
-    println!("{}", x[1][2]);
+    let n = heights.len();
+    let mut visibility = vec![vec![0; n]; n];
+
+    // set visible exterior
+    for i in 0..n {
+        for j in 0..n {
+            if i == 0 || i == n - 1 || j == 0 || j == n - 1 {
+                visibility[i][j] = 1;
+            }
+        }
+    }
+
+    // check along rows
+    for i in 0..n {
+        // forward
+        let mut idx = 0; // track location of highest tree so far
+        for j in 1..n {
+            if heights[i][j] > heights[i][idx] {
+                idx = j;
+                visibility[i][j] = 1;
+            }
+        }
+        // and backwards
+        let mut idx = n - 1; // track location of highest tree so far
+        for j in (0..(n - 1)).rev() {
+            if heights[i][j] > heights[i][idx] {
+                idx = j;
+                visibility[i][j] = 1;
+            }
+        }
+    }
+
+    // and along columns
+    for j in 0..n {
+        // forward
+        let mut idx = 0; // track location of highest tree so far
+        for i in 1..n {
+            if heights[i][j] > heights[idx][j] {
+                idx = i;
+                visibility[i][j] = 1;
+            }
+        }
+        // and backwards
+        let mut idx = n - 1; // track location of highest tree so far
+        for i in (0..(n - 1)).rev() {
+            if heights[i][j] > heights[idx][j] {
+                idx = i;
+                visibility[i][j] = 1;
+            }
+        }
+    }
+
+    // println!("{:?}", visibility);
+
+    let n_visible: i32 = visibility.iter().map(|x| x.iter().sum::<i32>()).sum();
+    println!("{}", n_visible);
 
     Ok(())
 }
