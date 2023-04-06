@@ -22,13 +22,27 @@ pub fn get_args() -> Result<Args, Box<dyn Error>> {
 
 pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
     let fin = open(&args.fin)?;
-    // let mut lines = fin.lines().filter_map(|x| x.ok());
-
     let heights = fin
         .lines()
         .map(|line| line_to_values(line.unwrap()))
         .collect::<Vec<_>>();
 
+    if args.part2 {
+        let answer = part2(heights)?;
+        println!("{}", answer);
+    } else {
+        let answer = part1(heights)?;
+        println!("{}", answer);
+    }
+
+    Ok(())
+}
+
+fn part2(heights: Vec<Vec<u32>>) -> Result<u32, Box<dyn Error>> {
+    Ok(0)
+}
+
+fn part1(heights: Vec<Vec<u32>>) -> Result<u32, Box<dyn Error>> {
     let n = heights.len();
     let mut visibility = vec![vec![0; n]; n];
 
@@ -81,12 +95,9 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
         }
     }
 
-    // println!("{:?}", visibility);
+    let n_visible: u32 = visibility.iter().map(|x| x.iter().sum::<u32>()).sum();
 
-    let n_visible: i32 = visibility.iter().map(|x| x.iter().sum::<i32>()).sum();
-    println!("{}", n_visible);
-
-    Ok(())
+    Ok(n_visible)
 }
 
 fn line_to_values(line: String) -> Vec<u32> {
