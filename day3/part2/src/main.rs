@@ -30,15 +30,15 @@ fn string_to_hashset(s: &str) -> HashSet<char> {
     set
 }
 
-fn find_common_character<'a, I>(lines: I) -> char
+fn find_common_character<I>(lines: I) -> char
 where
-    I: IntoIterator<Item = &'a str>,
+    I: IntoIterator<Item = String>,
 {
     // TODO: look into why .copied() is necessary here
     // https://users.rust-lang.org/t/intersection-of-hashsets/32351
     lines
         .into_iter()
-        .map(string_to_hashset)
+        .map(|x| string_to_hashset(x.as_str()))
         .reduce(|x, y| x.intersection(&y).copied().collect())
         .unwrap()
         .drain()
@@ -47,14 +47,16 @@ where
 }
 
 fn main() {
-    let mut reader = io::stdin().lock();
+    let reader = io::stdin().lock();
+    let mut total_priority = 0;
 
-    // let common = reader
-    //     .lines()
-    //     .chunks(3)
-    //     .into_iter()
-    //     .map(find_common_character)
-    //     .next();
+    for chunk in &reader.lines().filter_map(|x| x.ok()).chunks(3) {
+        let common = find_common_character(chunk);
+        // println!("{:?}", common);
+        total_priority += priority(common);
+    }
+
+    println!("{}", total_priority);
 }
 
 #[cfg(test)]
@@ -80,6 +82,7 @@ mod tests {
 
     #[test]
     fn test_find_common_character() {
-        assert_eq!(find_common_character(vec!["s1", "s2", "s3"]), 's');
+        let strings = vec!["s1", "s2", "s3"].into_iter().map(|x| x.to_owned());
+        assert_eq!(find_common_character(strings), 's');
     }
 }
