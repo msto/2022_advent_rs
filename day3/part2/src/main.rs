@@ -30,7 +30,10 @@ fn string_to_hashset(s: &str) -> HashSet<char> {
     set
 }
 
-fn find_common_character(lines: Vec<&str>) -> char {
+fn find_common_character<'a, I>(lines: I) -> char
+where
+    I: IntoIterator<Item = &'a str>,
+{
     // TODO: look into why .copied() is necessary here
     // https://users.rust-lang.org/t/intersection-of-hashsets/32351
     lines
@@ -46,12 +49,12 @@ fn find_common_character(lines: Vec<&str>) -> char {
 fn main() {
     let mut reader = io::stdin().lock();
 
-    let common = reader
-        .lines()
-        .chunks(3)
-        .into_iter()
-        .map(find_common_character)
-        .next();
+    // let common = reader
+    //     .lines()
+    //     .chunks(3)
+    //     .into_iter()
+    //     .map(find_common_character)
+    //     .next();
 }
 
 #[cfg(test)]
