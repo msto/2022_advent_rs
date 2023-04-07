@@ -1,5 +1,6 @@
 use clap::Parser;
 use std::{
+    collections::HashSet,
     error::Error,
     fs::File,
     io::{self, BufRead, BufReader},
@@ -25,12 +26,15 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
     let mut rope = Rope {
         head: [0, 0],
         tail: [0, 0],
+        tail_positions: HashSet::new(),
     };
 
     fin.lines()
         .filter_map(|x| x.ok())
         .filter_map(|x| parse_line(x).ok())
         .for_each(|(dir, dist)| rope.mv(dir, dist));
+
+    println!("{}", rope.tail_positions.len());
 
     Ok(())
 }
@@ -55,12 +59,14 @@ fn open(filename: &str) -> Result<Box<dyn BufRead>, Box<dyn Error>> {
 struct Rope {
     head: [i32; 2],
     tail: [i32; 2],
+    tail_positions: HashSet<[i32; 2]>,
 }
 
 impl Rope {
     fn mv(&mut self, direction: char, dist: i32) {
         for _ in 0..dist {
             self.move_head(direction);
+            self.tail_positions.insert(self.tail);
         }
     }
 
@@ -107,6 +113,7 @@ mod tests {
         let mut rope = Rope {
             head: [0, 0],
             tail: [0, 0],
+            tail_positions: HashSet::new(),
         };
 
         for pos in [[0, 0], [0, 1], [1, 1], [-1, 0], [-1, -1], [-1, 1]] {
@@ -125,6 +132,7 @@ mod tests {
         let mut rope = Rope {
             head: [0, 0],
             tail: [0, 0],
+            tail_positions: HashSet::new(),
         };
 
         rope.mv('R', 4);
