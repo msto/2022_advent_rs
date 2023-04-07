@@ -39,7 +39,72 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
 }
 
 fn part2(heights: Vec<Vec<u32>>) -> Result<u32, Box<dyn Error>> {
-    Ok(0)
+    let mut max_score = 0;
+    let n = heights.len();
+
+    for i in 0..n {
+        for j in 0..n {
+            let mut score = 1;
+            let curr_height = heights[i][j];
+
+            // left
+            let mut view_dist = 0;
+            for ix in (0..i).rev() {
+                view_dist += 1;
+                if heights[ix][j] >= curr_height {
+                    break;
+                }
+            }
+            score *= view_dist;
+
+            // right
+            let mut view_dist = 0;
+            for ix in (i + 1)..n {
+                view_dist += 1;
+                if heights[ix][j] >= curr_height {
+                    break;
+                }
+            }
+            score *= view_dist;
+
+            let mut view_dist = 0;
+            for jx in (0..j).rev() {
+                view_dist += 1;
+                if heights[i][jx] >= curr_height {
+                    break;
+                }
+            }
+            score *= view_dist;
+
+            let mut view_dist = 0;
+            for jx in (j + 1)..n {
+                view_dist += 1;
+                if heights[i][jx] >= curr_height {
+                    break;
+                }
+            }
+            score *= view_dist;
+
+            if score > max_score {
+                max_score = score;
+            }
+        }
+    }
+
+    Ok(max_score)
+}
+
+pub fn viewing_dist(height: u32, others: &[u32]) -> u32 {
+    let mut dist = 0;
+
+    for h in others {
+        dist += 1;
+        if h >= &height {
+            break;
+        }
+    }
+
+    dist
 }
 
 fn part1(heights: Vec<Vec<u32>>) -> Result<u32, Box<dyn Error>> {
@@ -95,7 +160,7 @@ fn part1(heights: Vec<Vec<u32>>) -> Result<u32, Box<dyn Error>> {
         }
     }
 
-    let n_visible: u32 = visibility.iter().map(|x| x.iter().sum::<u32>()).sum();
+    let n_visible = visibility.iter().map(|x| x.iter().sum::<u32>()).sum();
 
     Ok(n_visible)
 }
@@ -117,6 +182,14 @@ fn open(filename: &str) -> Result<Box<dyn BufRead>, Box<dyn Error>> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
-    fn test_() {}
+    fn test_viewing_dist() {
+        let others = vec![4, 5, 3];
+        assert_eq!(viewing_dist(2, &others), 1);
+        assert_eq!(viewing_dist(4, &others), 1);
+        assert_eq!(viewing_dist(5, &others), 2);
+        assert_eq!(viewing_dist(6, &others), 3);
+    }
 }
