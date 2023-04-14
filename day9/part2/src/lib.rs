@@ -1,4 +1,5 @@
-use clap::Parser;
+use Direction::*;
+
 use std::{
     collections::HashSet,
     error::Error,
@@ -6,6 +7,9 @@ use std::{
     io::{self, BufRead, BufReader},
 };
 
+use clap::Parser;
+
+// Boilerplate - argument parsing and file IO
 #[derive(Parser, Debug)]
 pub struct Args {
     #[arg(help = "Input file", id = "FILE", default_value = "-")]
@@ -21,6 +25,16 @@ pub fn get_args() -> Result<Args, Box<dyn Error>> {
     Ok(args)
 }
 
+fn open(filename: &str) -> Result<Box<dyn BufRead>, Box<dyn Error>> {
+    match filename {
+        "-" => Ok(Box::new(BufReader::new(io::stdin()))),
+        _ => Ok(Box::new(BufReader::new(
+            File::open(filename).map_err(|e| format!("{}: {}", filename, e))?,
+        ))),
+    }
+}
+
+/// Parse input and apply movement logic
 pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
     let fin = open(&args.fin)?;
     let mut rope = Rope {
@@ -31,28 +45,40 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
     fin.lines()
         .filter_map(|x| x.ok())
         .filter_map(|x| parse_line(x).ok())
-        .for_each(|(dir, dist)| rope.mv(dir, dist));
+        .for_each(|(direction, dist)| rope.mv(direction, dist));
 
     println!("{}", rope.tail_positions.len());
 
     Ok(())
 }
 
-fn parse_line(line: String) -> Result<(char, i32), Box<dyn Error>> {
+enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+impl Direction {
+    fn new(dir: char) -> Direction {
+        match dir {
+            'R' => Right,
+            'L' => Left,
+            'U' => Up,
+            'D' => Down,
+            _ => panic!("Unknown direction: {}", dir),
+        }
+    }
+}
+
+/// Parse line of input (tab-delimited direction (U/D/R/L) and distance)
+fn parse_line(line: String) -> Result<(Direction, i32), Box<dyn Error>> {
     let mut data = line.split_whitespace().into_iter();
-    let direction = data.next().unwrap().chars().next().unwrap();
+    let dir_char = data.next().unwrap().chars().next().unwrap();
+    let direction = Direction::new(dir_char);
     let distance = data.next().unwrap().parse::<i32>()?;
 
     Ok((direction, distance))
-}
-
-fn open(filename: &str) -> Result<Box<dyn BufRead>, Box<dyn Error>> {
-    match filename {
-        "-" => Ok(Box::new(BufReader::new(io::stdin()))),
-        _ => Ok(Box::new(BufReader::new(
-            File::open(filename).map_err(|e| format!("{}: {}", filename, e))?,
-        ))),
-    }
 }
 
 struct Rope {
@@ -61,20 +87,19 @@ struct Rope {
 }
 
 impl Rope {
-    fn mv(&mut self, direction: char, dist: i32) {
+    fn mv(&mut self, direction: Direction, dist: i32) {
         for _ in 0..dist {
-            self.move_head(direction);
+            self.move_head(&direction);
             self.tail_positions.insert(self.knots[9]);
         }
     }
 
-    fn move_head(&mut self, direction: char) {
+    fn move_head(&mut self, direction: &Direction) {
         match direction {
-            'R' => self.knots[0][0] += 1,
-            'L' => self.knots[0][0] -= 1,
-            'U' => self.knots[0][1] += 1,
-            'D' => self.knots[0][1] -= 1,
-            _ => panic!("Unknown direction: {}", direction),
+            Right => self.knots[0][0] += 1,
+            Left => self.knots[0][0] -= 1,
+            Up => self.knots[0][1] += 1,
+            Down => self.knots[0][1] -= 1,
         };
 
         for i in 1..10 {
@@ -91,18 +116,16 @@ impl Rope {
             && (self.knots[idx][1] - self.knots[idx - 1][1]).abs() <= 1
     }
 
-    fn move_knot(&mut self, idx: usize, direction: char) {
+    fn move_knot(&mut self, idx: usize, direction: &Direction) {
         match direction {
-            'R' | 'L' => self.knots[idx][1] = self.knots[idx - 1][1],
-            'U' | 'D' => self.knots[idx][0] = self.knots[idx - 1][0],
-            _ => panic!("Unknown direction: {}", direction),
+            Right | Left => self.knots[idx][1] = self.knots[idx - 1][1],
+            Up | Down => self.knots[idx][0] = self.knots[idx - 1][0],
         };
         match direction {
-            'R' => self.knots[idx][0] = self.knots[idx - 1][0] - 1,
-            'L' => self.knots[idx][0] = self.knots[idx - 1][0] + 1,
-            'U' => self.knots[idx][1] = self.knots[idx - 1][1] - 1,
-            'D' => self.knots[idx][1] = self.knots[idx - 1][1] + 1,
-            _ => panic!("Unknown direction: {}", direction),
+            Right => self.knots[idx][0] = self.knots[idx - 1][0] - 1,
+            Left => self.knots[idx][0] = self.knots[idx - 1][0] + 1,
+            Up => self.knots[idx][1] = self.knots[idx - 1][1] - 1,
+            Down => self.knots[idx][1] = self.knots[idx - 1][1] + 1,
         };
     }
 }
@@ -136,7 +159,7 @@ mod tests {
             tail_positions: HashSet::new(),
         };
 
-        rope.mv('R', 4);
+        rope.mv(Right, 4);
         assert_eq!(rope.knots[0], [4, 0]);
         assert_eq!(rope.knots[1], [3, 0]);
         assert_eq!(rope.knots[2], [2, 0]);
@@ -145,7 +168,7 @@ mod tests {
             assert_eq!(rope.knots[i], [0, 0]);
         }
 
-        rope.mv('U', 4);
+        rope.mv(Up, 4);
         assert_eq!(rope.knots[0], [4, 4]);
         assert_eq!(rope.knots[1], [4, 3]);
         assert_eq!(rope.knots[2], [4, 2]);
@@ -156,27 +179,27 @@ mod tests {
             assert_eq!(rope.knots[i], [0, 0]);
         }
 
-        rope.mv('L', 3);
+        rope.mv(Left, 3);
         assert_eq!(rope.knots[0], [1, 4]);
         assert_eq!(rope.knots[1], [2, 4]);
 
-        rope.mv('D', 1);
+        rope.mv(Down, 1);
         assert_eq!(rope.knots[0], [1, 3]);
         assert_eq!(rope.knots[1], [2, 4]);
 
-        rope.mv('R', 4);
+        rope.mv(Right, 4);
         assert_eq!(rope.knots[0], [5, 3]);
         assert_eq!(rope.knots[1], [4, 3]);
 
-        rope.mv('D', 1);
+        rope.mv(Down, 1);
         assert_eq!(rope.knots[0], [5, 2]);
         assert_eq!(rope.knots[1], [4, 3]);
 
-        rope.mv('L', 5);
+        rope.mv(Left, 5);
         assert_eq!(rope.knots[0], [0, 2]);
         assert_eq!(rope.knots[1], [1, 2]);
 
-        rope.mv('R', 2);
+        rope.mv(Right, 2);
         assert_eq!(rope.knots[0], [2, 2]);
         assert_eq!(rope.knots[1], [1, 2]);
     }
