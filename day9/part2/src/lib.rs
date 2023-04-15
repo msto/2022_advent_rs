@@ -87,6 +87,7 @@ struct Rope {
 }
 
 impl Rope {
+    /// Pull the rope a given distance
     fn mv(&mut self, direction: Direction, dist: i32) {
         for _ in 0..dist {
             self.move_head(&direction);
@@ -94,6 +95,8 @@ impl Rope {
         }
     }
 
+    /// Move the head of the rope one square in a given direction,
+    /// and pull the trailing knots accordingly
     fn move_head(&mut self, direction: &Direction) {
         match direction {
             Right => self.knots[0][0] += 1,
@@ -102,32 +105,58 @@ impl Rope {
             Down => self.knots[0][1] -= 1,
         };
 
+        // If a knot is touching its
         for i in 1..10 {
             if !self.is_touching(i) {
-                self.move_knot(i, direction);
+                self.move_knot(i);
             } else {
                 break;
             }
         }
     }
 
+    /// Check if a knot is still touching the preceding knot
     fn is_touching(&self, idx: usize) -> bool {
         (self.knots[idx][0] - self.knots[idx - 1][0]).abs() <= 1
             && (self.knots[idx][1] - self.knots[idx - 1][1]).abs() <= 1
     }
 
-    fn move_knot(&mut self, idx: usize, direction: &Direction) {
-        match direction {
-            Right | Left => self.knots[idx][1] = self.knots[idx - 1][1],
-            Up | Down => self.knots[idx][0] = self.knots[idx - 1][0],
-        };
-        match direction {
-            Right => self.knots[idx][0] = self.knots[idx - 1][0] - 1,
-            Left => self.knots[idx][0] = self.knots[idx - 1][0] + 1,
-            Up => self.knots[idx][1] = self.knots[idx - 1][1] - 1,
-            Down => self.knots[idx][1] = self.knots[idx - 1][1] + 1,
-        };
+    fn move_knot(&mut self, idx: usize) {
+        let prev_x = self.knots[idx - 1][0];
+        let prev_y = self.knots[idx - 1][1];
+
+        // vertical catch-up
+        if self.knots[idx][0] == prev_x {
+            self.knots[idx][1] = (prev_y + self.knots[idx][1]) / 2;
+        // horizontal catch-up
+        } else if self.knots[idx][1] == prev_y {
+            self.knots[idx][0] = (prev_x + self.knots[idx][0]) / 2;
+        // diagonal catch-up
+        } else {
+            self.knots[idx] = new_pos(self.knots[idx - 1], self.knots[idx]);
+        }
     }
+}
+
+fn new_pos(head: [i32; 2], tail: [i32; 2]) -> [i32; 2] {
+    let x_diff = tail[0] - head[0];
+    let y_diff = tail[1] - head[1];
+
+    let new_x = match x_diff {
+        0 | 1 | -1 => head[0],
+        2 => head[0] + 1,
+        -2 => head[0] - 1,
+        _ => panic!("Invalid pair: {:?} {:?}", head, tail),
+    };
+
+    let new_y = match y_diff {
+        0 | 1 | -1 => head[1],
+        2 => head[1] + 1,
+        -2 => head[1] - 1,
+        _ => panic!("Invalid pair: {:?} {:?}", head, tail),
+    };
+
+    [new_x, new_y]
 }
 
 #[cfg(test)]
