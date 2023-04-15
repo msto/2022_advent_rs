@@ -45,7 +45,7 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
     fin.lines()
         .filter_map(|x| x.ok())
         .filter_map(|x| parse_line(x).ok())
-        .for_each(|(direction, dist)| rope.mv(direction, dist));
+        .for_each(|(direction, dist)| rope.pull(direction, dist));
 
     println!("{}", rope.tail_positions.len());
 
@@ -88,7 +88,7 @@ struct Rope {
 
 impl Rope {
     /// Pull the rope a given distance
-    fn mv(&mut self, direction: Direction, dist: i32) {
+    fn pull(&mut self, direction: Direction, dist: i32) {
         for _ in 0..dist {
             self.move_head(&direction);
             self.tail_positions.insert(self.knots[9]);
@@ -98,6 +98,7 @@ impl Rope {
     /// Move the head of the rope one square in a given direction,
     /// and pull the trailing knots accordingly
     fn move_head(&mut self, direction: &Direction) {
+        // Move head
         match direction {
             Right => self.knots[0][0] += 1,
             Left => self.knots[0][0] -= 1,
@@ -105,7 +106,7 @@ impl Rope {
             Down => self.knots[0][1] -= 1,
         };
 
-        // If a knot is touching its
+        // Move each knot if it no longer touches its predecessor.
         for i in 1..10 {
             if !self.is_touching(i) {
                 self.move_knot(i);
@@ -188,7 +189,7 @@ mod tests {
             tail_positions: HashSet::new(),
         };
 
-        rope.mv(Right, 4);
+        rope.pull(Right, 4);
         assert_eq!(rope.knots[0], [4, 0]);
         assert_eq!(rope.knots[1], [3, 0]);
         assert_eq!(rope.knots[2], [2, 0]);
@@ -197,7 +198,7 @@ mod tests {
             assert_eq!(rope.knots[i], [0, 0]);
         }
 
-        rope.mv(Up, 4);
+        rope.pull(Up, 4);
         assert_eq!(rope.knots[0], [4, 4]);
         assert_eq!(rope.knots[1], [4, 3]);
         assert_eq!(rope.knots[2], [4, 2]);
@@ -208,27 +209,27 @@ mod tests {
             assert_eq!(rope.knots[i], [0, 0]);
         }
 
-        rope.mv(Left, 3);
+        rope.pull(Left, 3);
         assert_eq!(rope.knots[0], [1, 4]);
         assert_eq!(rope.knots[1], [2, 4]);
 
-        rope.mv(Down, 1);
+        rope.pull(Down, 1);
         assert_eq!(rope.knots[0], [1, 3]);
         assert_eq!(rope.knots[1], [2, 4]);
 
-        rope.mv(Right, 4);
+        rope.pull(Right, 4);
         assert_eq!(rope.knots[0], [5, 3]);
         assert_eq!(rope.knots[1], [4, 3]);
 
-        rope.mv(Down, 1);
+        rope.pull(Down, 1);
         assert_eq!(rope.knots[0], [5, 2]);
         assert_eq!(rope.knots[1], [4, 3]);
 
-        rope.mv(Left, 5);
+        rope.pull(Left, 5);
         assert_eq!(rope.knots[0], [0, 2]);
         assert_eq!(rope.knots[1], [1, 2]);
 
-        rope.mv(Right, 2);
+        rope.pull(Right, 2);
         assert_eq!(rope.knots[0], [2, 2]);
         assert_eq!(rope.knots[1], [1, 2]);
     }
