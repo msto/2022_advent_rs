@@ -81,6 +81,7 @@ fn parse_line(line: String) -> Result<(Direction, i32), Box<dyn Error>> {
     Ok((direction, distance))
 }
 
+/// Track the current positions of all knots, and the positions the tail has been to.
 struct Rope {
     knots: [[i32; 2]; 10],
     tail_positions: HashSet<[i32; 2]>,
