@@ -123,19 +123,7 @@ impl Rope {
     }
 
     fn move_knot(&mut self, idx: usize) {
-        let prev_x = self.knots[idx - 1][0];
-        let prev_y = self.knots[idx - 1][1];
-
-        // vertical catch-up
-        if self.knots[idx][0] == prev_x {
-            self.knots[idx][1] = (prev_y + self.knots[idx][1]) / 2;
-        // horizontal catch-up
-        } else if self.knots[idx][1] == prev_y {
-            self.knots[idx][0] = (prev_x + self.knots[idx][0]) / 2;
-        // diagonal catch-up
-        } else {
-            self.knots[idx] = new_pos(self.knots[idx - 1], self.knots[idx]);
-        }
+        self.knots[idx] = new_pos(self.knots[idx - 1], self.knots[idx]);
     }
 }
 
