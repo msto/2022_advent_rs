@@ -122,30 +122,29 @@ impl Rope {
             && (self.knots[idx][1] - self.knots[idx - 1][1]).abs() <= 1
     }
 
+    /// Move a knot towards its predecessor.
+    ///
+    /// `prev` and `knot` are equivalent to `head` and `tail` in the original formulation.
     fn move_knot(&mut self, idx: usize) {
-        self.knots[idx] = new_pos(self.knots[idx - 1], self.knots[idx]);
+        let knot = self.knots[idx];
+        let prev = self.knots[idx - 1];
+
+        // Assuming the two knots are not touching, the knot must be exactly two
+        // units away from its predecessor along one axis, and zero or one unit
+        // away along the other.
+        let new_knot_pos = |prev_pos: i32, knot_pos: i32| -> i32 {
+            let diff = knot_pos - prev_pos;
+            match diff {
+                0 | 1 | -1 => prev_pos,
+                2 => prev_pos + 1,
+                -2 => prev_pos - 1,
+                _ => panic!("Invalid pair: {:?} {:?}", prev, knot),
+            }
+        };
+
+        self.knots[idx][0] = new_knot_pos(prev[0], knot[0]);
+        self.knots[idx][1] = new_knot_pos(prev[1], knot[1]);
     }
-}
-
-fn new_pos(head: [i32; 2], tail: [i32; 2]) -> [i32; 2] {
-    let x_diff = tail[0] - head[0];
-    let y_diff = tail[1] - head[1];
-
-    let new_x = match x_diff {
-        0 | 1 | -1 => head[0],
-        2 => head[0] + 1,
-        -2 => head[0] - 1,
-        _ => panic!("Invalid pair: {:?} {:?}", head, tail),
-    };
-
-    let new_y = match y_diff {
-        0 | 1 | -1 => head[1],
-        2 => head[1] + 1,
-        -2 => head[1] - 1,
-        _ => panic!("Invalid pair: {:?} {:?}", head, tail),
-    };
-
-    [new_x, new_y]
 }
 
 #[cfg(test)]
