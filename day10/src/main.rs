@@ -16,15 +16,11 @@ fn main() {
 
 /// Parse input and apply logic
 pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
-    let fin = open(&args.fin)?;
-
     let mut cpu = CPU {
-        register_x: 1,
-        cycle_count: 0,
-        interesting_cycles: (20..250).step_by(40).collect(), // manual is ugly but easy
-        interesting_strength: 0,
+        ..Default::default()
     };
 
+    let fin = open(&args.fin)?;
     fin.lines()
         .filter_map(|x| parse_line(x).ok())
         .for_each(|instruction| cpu.execute(instruction));

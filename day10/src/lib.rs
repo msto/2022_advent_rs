@@ -4,7 +4,7 @@ use Instruction::*;
 #[derive(Debug)]
 pub enum Instruction {
     NoOp,
-    AddX(i32),
+    AddX(isize),
 }
 
 /// Parse line of input
@@ -15,7 +15,7 @@ pub fn parse_line(line: Result<String, std::io::Error>) -> Result<Instruction, B
 
     match op_name {
         Some("noop") => Ok(NoOp),
-        Some("addx") => Ok(AddX(data.next().unwrap().parse::<i32>()?)),
+        Some("addx") => Ok(AddX(data.next().unwrap().parse::<isize>()?)),
         _ => Err("Invalid operation".into()),
     }
 }
@@ -24,10 +24,10 @@ pub fn parse_line(line: Result<String, std::io::Error>) -> Result<Instruction, B
 /// Also, store the "interesting" cycles and track the cumulative strength
 /// observed at these cycles.
 pub struct CPU {
-    pub register_x: i32,
-    pub cycle_count: i32,
-    pub interesting_cycles: Vec<i32>,
-    pub interesting_strength: i32,
+    pub register_x: isize,
+    pub cycle_count: usize,
+    pub interesting_cycles: Vec<usize>,
+    pub interesting_strength: isize,
 }
 
 impl CPU {
@@ -43,14 +43,25 @@ impl CPU {
     }
 
     /// Tick a number of cycles, adding "interesting" strength when appropriate.
-    fn increment_cycles(&mut self, n_cycles: u32) {
+    fn increment_cycles(&mut self, n_cycles: usize) {
         for _ in 0..n_cycles {
             self.cycle_count += 1;
 
             // TODO: track next interesting cycle and do equality comparison
             if self.interesting_cycles.contains(&self.cycle_count) {
-                self.interesting_strength += self.cycle_count * self.register_x;
+                self.interesting_strength += (self.cycle_count as isize) * self.register_x;
             }
+        }
+    }
+}
+
+impl Default for CPU {
+    fn default() -> CPU {
+        CPU {
+            register_x: 1,
+            cycle_count: 0,
+            interesting_cycles: (20..250).step_by(40).collect(), // manual is ugly but easy
+            interesting_strength: 0,
         }
     }
 }
