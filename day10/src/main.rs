@@ -14,6 +14,26 @@ fn main() {
     }
 }
 
+/// Parse input and apply logic
+pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
+    let fin = open(&args.fin)?;
+
+    let mut cpu = CPU {
+        register_x: 1,
+        cycle_count: 0,
+        interesting_cycles: (20..250).step_by(40).collect(), // manual is ugly but easy
+        interesting_strength: 0,
+    };
+
+    fin.lines()
+        .filter_map(|x| parse_line(x).ok())
+        .for_each(|instruction| cpu.execute(instruction));
+
+    println!("{}", cpu.interesting_strength);
+
+    Ok(())
+}
+
 #[derive(Parser, Debug)]
 pub struct Args {
     #[arg(help = "Input file", id = "FILE", default_value = "-")]
@@ -36,24 +56,4 @@ fn open(filename: &str) -> Result<Box<dyn BufRead>, Box<dyn Error>> {
             File::open(filename).map_err(|e| format!("{}: {}", filename, e))?,
         ))),
     }
-}
-
-/// Parse input and apply logic
-pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
-    let fin = open(&args.fin)?;
-
-    let mut cpu = CPU {
-        register_x: 1,
-        cycle_count: 0,
-        interesting_cycles: (20..250).step_by(40).collect(), // manual is ugly but easy
-        interesting_strength: 0,
-    };
-
-    fin.lines()
-        .filter_map(|x| parse_line(x).ok())
-        .for_each(|instruction| cpu.execute(instruction));
-
-    println!("{}", cpu.interesting_strength);
-
-    Ok(())
 }
