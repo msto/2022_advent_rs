@@ -44,12 +44,16 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
 
     let mut cpu = CPU {
         register_x: 1,
-        n_cycles: 0,
+        cycle_count: 0,
+        interesting_cycles: (20..250).step_by(40).collect(), // manual is ugly but easy
+        interesting_strength: 0,
     };
 
     fin.lines()
         .filter_map(|x| parse_line(x).ok())
         .for_each(|instruction| cpu.execute(instruction));
+
+    println!("{}", cpu.interesting_strength);
 
     Ok(())
 }
