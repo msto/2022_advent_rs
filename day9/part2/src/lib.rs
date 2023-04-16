@@ -1,58 +1,7 @@
+use std::{collections::HashSet, error::Error};
 use Direction::*;
 
-use std::{
-    collections::HashSet,
-    error::Error,
-    fs::File,
-    io::{self, BufRead, BufReader},
-};
-
-use clap::Parser;
-
-// Boilerplate - argument parsing and file IO
-#[derive(Parser, Debug)]
-pub struct Args {
-    #[arg(help = "Input file", id = "FILE", default_value = "-")]
-    fin: String,
-
-    #[arg(long = "part2", help = "Use part2 logic", default_value_t = false)]
-    part2: bool,
-}
-
-pub fn get_args() -> Result<Args, Box<dyn Error>> {
-    let args = Args::parse();
-
-    Ok(args)
-}
-
-fn open(filename: &str) -> Result<Box<dyn BufRead>, Box<dyn Error>> {
-    match filename {
-        "-" => Ok(Box::new(BufReader::new(io::stdin()))),
-        _ => Ok(Box::new(BufReader::new(
-            File::open(filename).map_err(|e| format!("{}: {}", filename, e))?,
-        ))),
-    }
-}
-
-/// Parse input and apply movement logic
-pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
-    let fin = open(&args.fin)?;
-    let mut rope = Rope {
-        knots: [[0, 0]; 10],
-        tail_positions: HashSet::new(),
-    };
-
-    fin.lines()
-        .filter_map(|x| x.ok())
-        .filter_map(|x| parse_line(x).ok())
-        .for_each(|(direction, dist)| rope.pull(direction, dist));
-
-    println!("{}", rope.tail_positions.len());
-
-    Ok(())
-}
-
-enum Direction {
+pub enum Direction {
     Up,
     Down,
     Left,
@@ -72,7 +21,7 @@ impl Direction {
 }
 
 /// Parse line of input (tab-delimited direction (U/D/R/L) and distance)
-fn parse_line(line: String) -> Result<(Direction, i32), Box<dyn Error>> {
+pub fn parse_line(line: String) -> Result<(Direction, i32), Box<dyn Error>> {
     let mut data = line.split_whitespace().into_iter();
     let dir_char = data.next().unwrap().chars().next().unwrap();
     let direction = Direction::new(dir_char);
@@ -82,14 +31,14 @@ fn parse_line(line: String) -> Result<(Direction, i32), Box<dyn Error>> {
 }
 
 /// Track the current positions of all knots, and the positions the tail has been to.
-struct Rope {
-    knots: [[i32; 2]; 10],
-    tail_positions: HashSet<[i32; 2]>,
+pub struct Rope {
+    pub knots: [[i32; 2]; 10],
+    pub tail_positions: HashSet<[i32; 2]>,
 }
 
 impl Rope {
     /// Pull the rope a given distance
-    fn pull(&mut self, direction: Direction, dist: i32) {
+    pub fn pull(&mut self, direction: Direction, dist: i32) {
         for _ in 0..dist {
             self.move_head(&direction);
             self.tail_positions.insert(self.knots[9]);
@@ -133,6 +82,7 @@ impl Rope {
         // Assuming the two knots are not touching, the knot must be exactly two
         // units away from its predecessor along one axis, and zero or one unit
         // away along the other.
+        //
         let new_knot_pos = |prev_pos: i32, knot_pos: i32| -> i32 {
             let diff = knot_pos - prev_pos;
             match diff {
