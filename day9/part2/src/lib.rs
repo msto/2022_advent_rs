@@ -21,8 +21,11 @@ impl Direction {
 }
 
 /// Parse line of input (tab-delimited direction (U/D/R/L) and distance)
-pub fn parse_line(line: String) -> Result<(Direction, i32), Box<dyn Error>> {
-    let mut data = line.split_whitespace().into_iter();
+pub fn parse_line(
+    line: Result<String, std::io::Error>,
+) -> Result<(Direction, i32), Box<dyn Error>> {
+    let line_str = line?;
+    let mut data = line_str.split_whitespace().into_iter();
     let dir_char = data.next().unwrap().chars().next().unwrap();
     let direction = Direction::new(dir_char);
     let distance = data.next().unwrap().parse::<i32>()?;

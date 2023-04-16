@@ -49,7 +49,6 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
     };
 
     fin.lines()
-        .filter_map(|x| x.ok())
         .filter_map(|x| parse_line(x).ok())
         .for_each(|(direction, dist)| rope.pull(direction, dist));
 
