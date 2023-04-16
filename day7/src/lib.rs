@@ -20,6 +20,25 @@ struct FsNode {
     contents: Option<HashMap<String, Rc<FsNode>>>,
 }
 
+impl FsNode {
+    fn size(&self) -> usize {
+        match self.kind {
+            FsNodeType::Dir => self
+                .contents
+                .as_ref()
+                .unwrap()
+                .values()
+                .map(|x| x.size())
+                .sum(),
+            FsNodeType::File => self.dsize,
+        }
+    }
+
+    fn add_child(&self, node: Rc<FsNode>>) {
+        self.contents.insert(node.name, node);
+    }
+}
+
 fn parse_node(line: &str, curr_dir: Option<Rc<FsNode>>) -> FsNode {
     let mut data = line.split_whitespace();
     let dtype = data.next().unwrap();
@@ -66,8 +85,8 @@ pub fn get_args() -> Result<Args, Box<dyn Error>> {
 }
 
 pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
-    let fin = open(&args.fin)?;
-    let mut lines = fin.lines().filter_map(|x| x.ok());
+    let _fin = open(&args.fin)?;
+    // let mut lines = fin.lines().filter_map(|x| x.ok());
 
     Ok(())
 }
@@ -109,5 +128,33 @@ mod tests {
         assert_eq!(node.dsize, 123);
         assert!(node.parent.is_none());
         assert!(node.contents.is_none());
+    }
+
+    fn test_FsNode_size() {
+        let f1 = FsNode {
+            kind: FsNodeType::File,
+            name: "file1".to_string(),
+            dsize: 123,
+            parent: None,
+            contents: None,
+        };
+        let f2 = FsNode {
+            kind: FsNodeType::File,
+            name: "file2".to_string(),
+            dsize: 456,
+            parent: None,
+            contents: None,
+        };
+
+        let test_dir = FsNode {
+            kind: FsNodeType::Dir,
+            name: "test_dir".to_string(),
+            dsize: 0,
+            parent: None,
+            contents: Some(HashMap::new()),
+        };
+
+        test_dir.contents.unwrap().insert(f1.name, &Rc::clone(f1));
+        test_dir.contents.unwrap().insert(f1.name, f1);
     }
 }
