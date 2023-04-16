@@ -5,7 +5,7 @@ use std::{
     io::{self, BufRead, BufReader},
 };
 
-// use day10::parse_line;
+use day10::{parse_line, CPU};
 
 fn main() {
     if let Err(e) = get_args().and_then(run) {
@@ -38,9 +38,18 @@ fn open(filename: &str) -> Result<Box<dyn BufRead>, Box<dyn Error>> {
     }
 }
 
-/// Parse input and apply movement logic
+/// Parse input and apply logic
 pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
-    let _fin = open(&args.fin)?;
+    let fin = open(&args.fin)?;
+
+    let mut cpu = CPU {
+        register_x: 1,
+        n_cycles: 0,
+    };
+
+    fin.lines()
+        .filter_map(|x| parse_line(x).ok())
+        .for_each(|instruction| cpu.execute(instruction));
 
     Ok(())
 }

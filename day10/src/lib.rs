@@ -20,6 +20,23 @@ pub fn parse_line(line: Result<String, std::io::Error>) -> Result<Instruction, B
     }
 }
 
+pub struct CPU {
+    pub register_x: i32,
+    pub n_cycles: u32,
+}
+
+impl CPU {
+    pub fn execute(&mut self, instr: Instruction) {
+        match instr {
+            AddX(val) => {
+                self.n_cycles += 2;
+                self.register_x += val;
+            }
+            NoOp => self.n_cycles += 1,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
