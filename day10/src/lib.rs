@@ -9,7 +9,7 @@ pub enum Instruction {
 
 /// Parse line of input
 pub fn parse_line(line: String) -> Result<Instruction, Box<dyn Error>> {
-    let mut data = line.split_whitespace().into_iter();
+    let mut data = line.split_whitespace();
     let op_name = data.next();
 
     match op_name {
