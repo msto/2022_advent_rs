@@ -1,4 +1,5 @@
 use clap::Parser;
+use itertools::Itertools;
 use std::{
     error::Error,
     fs::File,
@@ -16,10 +17,18 @@ fn main() {
 
 /// Parse input and apply logic
 pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
-    let _fin = open(&args.fin)?;
-    // fin.lines()
-    // .filter_map(|x| parse_line(x.ok().unwrap()).ok()) // TODO: is there a cleaner way to unpack the Result lines?
-    // .for_each(|x| TODO);
+    let fin = open(&args.fin)?;
+
+    fin.lines()
+        .filter_map(|x| x.ok())
+        .chunks(7)
+        .into_iter()
+        .map(|x| {
+            x.filter(|x| !x.is_empty())
+                .collect::<Vec<String>>()
+                .join("\n")
+        })
+        .for_each(|x| println!("===\n{}\n===", x));
 
     Ok(())
 }
