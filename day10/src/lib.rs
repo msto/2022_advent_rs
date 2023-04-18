@@ -27,6 +27,7 @@ pub struct CPU {
     pub cycle_count: usize,
     pub interesting_cycles: Vec<usize>,
     pub interesting_strength: isize,
+    pub crt: CRT,
 }
 
 impl CPU {
@@ -50,7 +51,13 @@ impl CPU {
             if self.interesting_cycles.contains(&self.cycle_count) {
                 self.interesting_strength += (self.cycle_count as isize) * self.register_x;
             }
+
+            self.crt.draw(self.cycle_count, self.register_x as usize);
         }
+    }
+
+    pub fn display(&self) {
+        self.crt.print();
     }
 }
 
@@ -61,6 +68,43 @@ impl Default for CPU {
             cycle_count: 0,
             interesting_cycles: (20..250).step_by(40).collect(), // manual is ugly but easy
             interesting_strength: 0,
+            crt: CRT {
+                ..Default::default()
+            },
+        }
+    }
+}
+
+const CRT_DISPLAY_WIDTH: usize = 40;
+const CRT_DISPLAY_HEIGHT: usize = 6;
+pub struct CRT {
+    display: [[char; CRT_DISPLAY_WIDTH]; CRT_DISPLAY_HEIGHT],
+}
+
+impl CRT {
+    fn draw(&mut self, cycle: usize, sprite_pos: usize) {
+        let x = (cycle - 1) % CRT_DISPLAY_WIDTH;
+        let y = (cycle - 1) / CRT_DISPLAY_WIDTH;
+
+        let dist = (sprite_pos as isize) - (x as isize);
+        if dist.abs() <= 1 {
+            self.display[y][x] = '#';
+        } else {
+            self.display[y][x] = '.';
+        }
+    }
+
+    fn print(&self) {
+        for row in self.display {
+            println!("{}", row.into_iter().collect::<String>());
+        }
+    }
+}
+
+impl Default for CRT {
+    fn default() -> CRT {
+        CRT {
+            display: [['_'; CRT_DISPLAY_WIDTH]; CRT_DISPLAY_HEIGHT],
         }
     }
 }

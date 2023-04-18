@@ -27,6 +27,8 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
 
     println!("{}", cpu.interesting_strength);
 
+    cpu.display();
+
     Ok(())
 }
 
