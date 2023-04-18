@@ -8,9 +8,8 @@ pub enum Instruction {
 }
 
 /// Parse line of input
-pub fn parse_line(line: Result<String, std::io::Error>) -> Result<Instruction, Box<dyn Error>> {
-    let line_str = line?;
-    let mut data = line_str.split_whitespace().into_iter();
+pub fn parse_line(line: String) -> Result<Instruction, Box<dyn Error>> {
+    let mut data = line.split_whitespace().into_iter();
     let op_name = data.next();
 
     match op_name {
@@ -73,10 +72,10 @@ mod tests {
 
     #[test]
     fn test_parse_line() {
-        let instr = parse_line(Ok("noop".to_string()));
+        let instr = parse_line("noop".to_string());
         assert!(matches!(instr, Ok(NoOp)));
 
-        let instr = parse_line(Ok("addx 10".to_string()));
+        let instr = parse_line("addx 10".to_string());
         assert!(matches!(instr, Ok(AddX(10))));
     }
 }

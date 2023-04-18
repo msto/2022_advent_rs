@@ -22,7 +22,7 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
 
     let fin = open(&args.fin)?;
     fin.lines()
-        .filter_map(|x| parse_line(x).ok())
+        .filter_map(|x| parse_line(x.ok().unwrap()).ok()) // TODO: is there a cleaner way to unpack the Result lines?
         .for_each(|instruction| cpu.execute(instruction));
 
     println!("{}", cpu.interesting_strength);
