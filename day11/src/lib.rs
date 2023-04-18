@@ -11,8 +11,20 @@ pub struct Monkey {
 }
 
 impl Monkey {
-    fn inspect(&self) -> usize {
-        0
+    // fn inspect_items(&mut self) -> impl Iterator<Item = (usize, usize)> {
+    //     self.items.drain(..).map(|x| inspect_item(x))
+    // }
+
+    fn inspect_item(&self, item: usize) -> (usize, usize) {
+        let worry_level = (self.op)(item) / RELIEF_FACTOR;
+
+        let dst = if worry_level % self.divisor == 0 {
+            self.true_dst
+        } else {
+            self.false_dst
+        };
+
+        (dst, worry_level)
     }
 
     fn add(&mut self, item: usize) {
@@ -33,28 +45,40 @@ pub fn parse_line(line: String) -> Result<Monkey, Box<dyn Error>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::matches;
 
     fn make_test_monkey() -> Monkey {
         Monkey {
-            items: vec![92, 73, 86],
-            op: |x| x * 5,
-            divisor: 11,
-            true_dst: 3,
-            false_dst: 4,
+            items: vec![79, 98],
+            op: |x| x * 19,
+            divisor: 23,
+            true_dst: 2,
+            false_dst: 3,
         }
     }
 
     #[test]
     fn test_monkey_init() {
         let monkey = make_test_monkey();
-        assert_eq!((monkey.op)(monkey.items[0]), 92 * 5)
+        assert_eq!((monkey.op)(monkey.items[0]), 79 * 19)
     }
 
     #[test]
     fn test_monkey_add() {
         let mut monkey = make_test_monkey();
         monkey.add(7);
-        assert_eq!(monkey.items, vec![92, 73, 86, 7]);
+        assert_eq!(monkey.items, vec![79, 98, 7]);
+    }
+
+    #[test]
+    fn test_monkey_inspect_item() {
+        let monkey = make_test_monkey();
+
+        let (dst, worry_level) = monkey.inspect_item(monkey.items[0]);
+        assert_eq!(worry_level, 500);
+        assert_eq!(dst, 3);
+
+        let (dst, worry_level) = monkey.inspect_item(monkey.items[1]);
+        assert_eq!(worry_level, 620);
+        assert_eq!(dst, 3);
     }
 }
