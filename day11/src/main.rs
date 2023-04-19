@@ -6,7 +6,9 @@ use std::{
     io::{self, BufRead, BufReader},
 };
 
-use day11::parse_line;
+use day11::parse_monkey;
+
+const N_ROUNDS: usize = 20;
 
 fn main() {
     if let Err(e) = get_args().and_then(run) {
@@ -19,7 +21,8 @@ fn main() {
 pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
     let fin = open(&args.fin)?;
 
-    fin.lines()
+    let mut monkeys = fin
+        .lines()
         .filter_map(|x| x.ok())
         .chunks(7)
         .into_iter()
@@ -28,7 +31,10 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
                 .collect::<Vec<String>>()
                 .join("\n")
         })
-        .for_each(|x| println!("===\n{}\n===", x));
+        .filter_map(|x| parse_monkey(&x).ok())
+        .collect::<Vec<_>>();
+
+    println!("{}", monkeys.len());
 
     Ok(())
 }

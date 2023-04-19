@@ -4,7 +4,7 @@ use std::error::Error;
 const RELIEF_FACTOR: usize = 3;
 
 pub struct Monkey {
-    items: Vec<usize>,
+    pub items: Vec<usize>,
     operation: Operation,
     divisor: usize,
     true_dst: usize,
@@ -35,7 +35,7 @@ impl Operation {
     }
 }
 
-fn parse_monkey(monkey_str: &str) -> Result<Monkey, Box<dyn Error>> {
+pub fn parse_monkey(monkey_str: &str) -> Result<Monkey, Box<dyn Error>> {
     let re = Regex::new(
         r"Monkey (\d+):
   Starting items: (.*)
