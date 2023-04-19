@@ -5,37 +5,37 @@ const RELIEF_FACTOR: usize = 3;
 
 pub struct Monkey {
     items: Vec<usize>,
-    op: fn(usize) -> usize,
+    operation: Operation,
     divisor: usize,
     true_dst: usize,
     false_dst: usize,
 }
 
-enum Op {
+enum Operator {
     Add,
     Mult,
 }
 
 struct Operation {
-    op: Op,
-    term: Option<usize>,
+    operator: Operator,
+    operand: Option<usize>,
 }
 
 impl Operation {
     fn apply(&self, old: usize) -> usize {
-        let term = match self.term {
+        let operand = match self.operand {
             Some(val) => val,
             None => old,
         };
 
-        match self.op {
-            Op::Add => old + term,
-            Op::Mult => old * term,
+        match self.operator {
+            Operator::Add => old + operand,
+            Operator::Mult => old * operand,
         }
     }
 }
 
-fn parse_monkey(monkey_str: &str) -> Monkey {
+fn parse_monkey(monkey_str: &str) -> Result<Monkey, Box<dyn Error>> {
     let re = Regex::new(
         r"Monkey (\d+):
   Starting items: (.*)
@@ -53,17 +53,17 @@ fn parse_monkey(monkey_str: &str) -> Monkey {
         .filter_map(|x| x.parse::<usize>().ok())
         .collect::<Vec<_>>();
 
-    // TODO: parse operation into closure
+    let operation = parse_operation(&cap[3])?;
 
     let parse_int = |x: &str| -> usize { x.parse::<usize>().unwrap() };
 
-    Monkey {
+    Ok(Monkey {
         items: items,
-        op: |x| x,
+        operation: operation,
         divisor: parse_int(&cap[4]),
         true_dst: parse_int(&cap[5]),
         false_dst: parse_int(&cap[6]),
-    }
+    })
 }
 
 // TODO: would like to directly parse into a closure
@@ -71,20 +71,20 @@ fn parse_operation(op_str: &str) -> Result<Operation, Box<dyn Error>> {
     let re = Regex::new(r"new = old (\+|\*) (.*)").unwrap();
     let cap = re.captures(op_str).unwrap();
 
-    let op: Result<Op, Box<dyn Error>> = match &cap[1] {
-        "+" => Ok(Op::Add),
-        "*" => Ok(Op::Mult),
+    let operator: Result<Operator, Box<dyn Error>> = match &cap[1] {
+        "+" => Ok(Operator::Add),
+        "*" => Ok(Operator::Mult),
         _ => Err("Invalid operation".into()),
     };
 
-    let term = match &cap[2] {
+    let operand = match &cap[2] {
         "old" => None,
         _ => cap[2].parse::<usize>().ok(),
     };
 
     Ok(Operation {
-        op: op?,
-        term: term,
+        operator: operator?,
+        operand: operand,
     })
 }
 
@@ -94,7 +94,7 @@ impl Monkey {
     // }
 
     fn inspect_item(&self, item: usize) -> (usize, usize) {
-        let worry_level = (self.op)(item) / RELIEF_FACTOR;
+        let worry_level = self.operation.apply(item) / RELIEF_FACTOR;
 
         let dst = if worry_level % self.divisor == 0 {
             self.true_dst
@@ -129,7 +129,10 @@ mod tests {
     fn make_test_monkey() -> Monkey {
         Monkey {
             items: vec![79, 98],
-            op: |x| x * 19,
+            operation: Operation {
+                operator: Operator::Mult,
+                operand: Some(19),
+            }, // |x| x * 19,
             divisor: 23,
             true_dst: 2,
             false_dst: 3,
@@ -139,7 +142,7 @@ mod tests {
     #[test]
     fn test_monkey_init() {
         let monkey = make_test_monkey();
-        assert_eq!((monkey.op)(monkey.items[0]), 79 * 19)
+        assert_eq!(monkey.operation.apply(monkey.items[0]), 79 * 19)
     }
 
     #[test]
@@ -171,7 +174,7 @@ mod tests {
     If true: throw to monkey 3
     If false: throw to monkey 4";
 
-        let monkey = parse_monkey(monkey_str);
+        let monkey = parse_monkey(monkey_str).unwrap();
 
         assert_eq!(monkey.items, vec![92, 73, 86, 83, 65, 51, 55, 93]);
         assert_eq!(monkey.divisor, 11);
@@ -183,34 +186,34 @@ mod tests {
     fn test_parse_operation() {
         let op_str = "new = old * 5";
         let f = parse_operation(op_str).unwrap();
-        assert!(matches!(f.op, Op::Mult));
-        assert_eq!(f.term, Some(5));
+        assert!(matches!(f.operator, Operator::Mult));
+        assert_eq!(f.operand, Some(5));
         assert_eq!(f.apply(3), 15);
 
         let op_str = "new = old + old";
         let f = parse_operation(op_str).unwrap();
-        assert!(matches!(f.op, Op::Add));
-        assert_eq!(f.term, None);
+        assert!(matches!(f.operator, Operator::Add));
+        assert_eq!(f.operand, None);
         assert_eq!(f.apply(3), 6);
     }
 
     #[test]
     fn test_operation() {
         let operation = Operation {
-            op: Op::Add,
-            term: Some(3),
+            operator: Operator::Add,
+            operand: Some(3),
         };
         assert_eq!(operation.apply(4), 7);
 
         let operation = Operation {
-            op: Op::Mult,
-            term: Some(3),
+            operator: Operator::Mult,
+            operand: Some(3),
         };
         assert_eq!(operation.apply(4), 12);
 
         let operation = Operation {
-            op: Op::Mult,
-            term: None,
+            operator: Operator::Mult,
+            operand: None,
         };
         assert_eq!(operation.apply(4), 16);
     }
