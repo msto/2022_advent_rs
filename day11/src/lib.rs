@@ -11,6 +11,7 @@ pub struct Monkey {
     pub divisor: usize,
     pub true_dst: usize,
     pub false_dst: usize,
+    pub n_inspections: usize,
 }
 
 #[derive(Debug)]
@@ -68,6 +69,7 @@ pub fn parse_monkey(monkey_str: &str) -> Result<Monkey, Box<dyn Error>> {
         divisor: parse_int(&cap[4]),
         true_dst: parse_int(&cap[5]),
         false_dst: parse_int(&cap[6]),
+        n_inspections: 0,
     })
 }
 
@@ -132,6 +134,7 @@ mod tests {
             divisor: 23,
             true_dst: 2,
             false_dst: 3,
+            n_inspections: 0,
         }
     }
 

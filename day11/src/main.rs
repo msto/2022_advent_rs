@@ -36,35 +36,41 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
         .filter_map(|x| parse_monkey(&x).ok())
         .collect::<Vec<_>>();
 
-    // apply a round of inspection
-    for i in 0..monkeys.len() {
-        // split monkeys into flanking mutable vectors so we can
-        // push contents from one monkey onto others
-        // https://stackoverflow.com/questions/49143770/efficiently-mutate-a-vector-while-also-iterating-over-the-same-vector
-        let (left, mid_right) = monkeys.split_at_mut(i);
-        let (mid, right) = mid_right.split_at_mut(1);
-        let monkey = &mut mid[0];
+    for _ in 0..N_ROUNDS {
+        // apply a round of inspection
+        for i in 0..monkeys.len() {
+            // split monkeys into flanking mutable vectors so we can
+            // push contents from one monkey onto others
+            // https://stackoverflow.com/questions/49143770/efficiently-mutate-a-vector-while-also-iterating-over-the-same-vector
+            let (left, mid_right) = monkeys.split_at_mut(i);
+            let (mid, right) = mid_right.split_at_mut(1);
+            let monkey = &mut mid[0];
 
-        // update the worry level and then move the item appropriately
-        monkey
-            .items
-            .drain(..)
-            .map(|item| monkey.operation.apply(item) / RELIEF_FACTOR)
-            .for_each(|new| {
-                let dst = match new % monkey.divisor {
-                    0 => monkey.true_dst,
-                    _ => monkey.false_dst,
-                };
-                match dst < i {
-                    true => left[dst].add(new),
-                    false => right[(dst - i - 1)].add(new),
-                }
-            });
+            // track total number of inspections
+            monkey.n_inspections += monkey.items.len();
+
+            // update the worry level and then move the item appropriately
+            monkey
+                .items
+                .drain(..)
+                .map(|item| monkey.operation.apply(item) / RELIEF_FACTOR)
+                .for_each(|new| {
+                    let dst = match new % monkey.divisor {
+                        0 => monkey.true_dst,
+                        _ => monkey.false_dst,
+                    };
+                    match dst < i {
+                        true => left[dst].add(new),
+                        false => right[(dst - i - 1)].add(new),
+                    }
+                });
+        }
     }
 
-    for monkey in monkeys {
-        println!("{:?}", monkey.items)
-    }
+    monkeys.sort_by_key(|x| x.n_inspections);
+
+    let biz = monkeys[monkeys.len() - 1].n_inspections * monkeys[monkeys.len() - 2].n_inspections;
+    println!("monkey business: {}", biz);
 
     Ok(())
 }
