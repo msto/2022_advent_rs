@@ -66,18 +66,26 @@ fn parse_monkey(monkey_str: &str) -> Monkey {
     }
 }
 
-fn parse_operation(op_str: &str) -> (String, String) {
+// TODO: would like to directly parse into a closure
+fn parse_operation(op_str: &str) -> Result<Operation, Box<dyn Error>> {
     let re = Regex::new(r"new = old (\+|\*) (.*)").unwrap();
     let cap = re.captures(op_str).unwrap();
 
-    // match (cap[1], cap[2]) {
-    //     ("+", "old") => |x| x + x,
-    //     ("*", "old") => |x| x * x,
-    //     ("+", _) => |x| x + cap[2].parse::<usize>().unwrap(),
-    //     ("*", _) => |x| x + cap[2].parse::<usize>().unwrap(),
-    // }
+    let op: Result<Op, Box<dyn Error>> = match &cap[1] {
+        "+" => Ok(Op::Add),
+        "*" => Ok(Op::Mult),
+        _ => Err("Invalid operation".into()),
+    };
 
-    (cap[1].to_string(), cap[2].to_string())
+    let term = match &cap[2] {
+        "old" => None,
+        _ => cap[2].parse::<usize>().ok(),
+    };
+
+    Ok(Operation {
+        op: op?,
+        term: term,
+    })
 }
 
 impl Monkey {
@@ -114,6 +122,8 @@ pub fn parse_line(line: String) -> Result<Monkey, Box<dyn Error>> {
 
 #[cfg(test)]
 mod tests {
+    use std::matches;
+
     use super::*;
 
     fn make_test_monkey() -> Monkey {
@@ -172,16 +182,19 @@ mod tests {
     #[test]
     fn test_parse_operation() {
         let op_str = "new = old * 5";
-        let (op, term) = parse_operation(op_str);
-        assert_eq!(op, "*");
-        assert_eq!(term, "5");
+        let f = parse_operation(op_str).unwrap();
+        assert!(matches!(f.op, Op::Mult));
+        assert_eq!(f.term, Some(5));
+        assert_eq!(f.apply(3), 15);
 
         let op_str = "new = old + old";
-        let (op, term) = parse_operation(op_str);
-        assert_eq!(op, "+");
-        assert_eq!(term, "old");
+        let f = parse_operation(op_str).unwrap();
+        assert!(matches!(f.op, Op::Add));
+        assert_eq!(f.term, None);
+        assert_eq!(f.apply(3), 6);
     }
 
+    #[test]
     fn test_operation() {
         let operation = Operation {
             op: Op::Add,
