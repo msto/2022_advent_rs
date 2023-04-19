@@ -9,6 +9,7 @@ use std::{
 use day11::parse_monkey;
 
 const N_ROUNDS: usize = 20;
+const RELIEF_FACTOR: usize = 3;
 
 fn main() {
     if let Err(e) = get_args().and_then(run) {
@@ -21,6 +22,7 @@ fn main() {
 pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
     let fin = open(&args.fin)?;
 
+    // parse monkeys
     let mut monkeys = fin
         .lines()
         .filter_map(|x| x.ok())
@@ -34,7 +36,35 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
         .filter_map(|x| parse_monkey(&x).ok())
         .collect::<Vec<_>>();
 
-    println!("{}", monkeys.len());
+    // apply a round of inspection
+    for i in 0..monkeys.len() {
+        // split monkeys into flanking mutable vectors so we can
+        // push contents from one monkey onto others
+        // https://stackoverflow.com/questions/49143770/efficiently-mutate-a-vector-while-also-iterating-over-the-same-vector
+        let (left, mid_right) = monkeys.split_at_mut(i);
+        let (mid, right) = mid_right.split_at_mut(1);
+        let monkey = &mut mid[0];
+
+        // update the worry level and then move the item appropriately
+        monkey
+            .items
+            .drain(..)
+            .map(|item| monkey.operation.apply(item) / RELIEF_FACTOR)
+            .for_each(|new| {
+                let dst = match new % monkey.divisor {
+                    0 => monkey.true_dst,
+                    _ => monkey.false_dst,
+                };
+                match dst < i {
+                    true => left[dst].add(new),
+                    false => right[(dst - i - 1)].add(new),
+                }
+            });
+    }
+
+    for monkey in monkeys {
+        println!("{:?}", monkey.items)
+    }
 
     Ok(())
 }

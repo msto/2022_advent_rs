@@ -3,26 +3,30 @@ use std::error::Error;
 
 const RELIEF_FACTOR: usize = 3;
 
+#[derive(Debug)]
 pub struct Monkey {
+    pub id: usize,
     pub items: Vec<usize>,
-    operation: Operation,
-    divisor: usize,
-    true_dst: usize,
-    false_dst: usize,
+    pub operation: Operation,
+    pub divisor: usize,
+    pub true_dst: usize,
+    pub false_dst: usize,
 }
 
+#[derive(Debug)]
 enum Operator {
     Add,
     Mult,
 }
 
-struct Operation {
+#[derive(Debug)]
+pub struct Operation {
     operator: Operator,
     operand: Option<usize>,
 }
 
 impl Operation {
-    fn apply(&self, old: usize) -> usize {
+    pub fn apply(&self, old: usize) -> usize {
         let operand = match self.operand {
             Some(val) => val,
             None => old,
@@ -58,8 +62,9 @@ pub fn parse_monkey(monkey_str: &str) -> Result<Monkey, Box<dyn Error>> {
     let parse_int = |x: &str| -> usize { x.parse::<usize>().unwrap() };
 
     Ok(Monkey {
-        items: items,
-        operation: operation,
+        id: parse_int(&cap[1]),
+        items,
+        operation,
         divisor: parse_int(&cap[4]),
         true_dst: parse_int(&cap[5]),
         false_dst: parse_int(&cap[6]),
@@ -93,21 +98,21 @@ impl Monkey {
     //     self.items.drain(..).map(|x| inspect_item(x))
     // }
 
-    fn inspect_item(&self, item: usize) -> (usize, usize) {
-        let worry_level = self.operation.apply(item) / RELIEF_FACTOR;
-
-        let dst = if worry_level % self.divisor == 0 {
-            self.true_dst
-        } else {
-            self.false_dst
-        };
-
-        (dst, worry_level)
-    }
-
-    fn add(&mut self, item: usize) {
+    pub fn add(&mut self, item: usize) {
         self.items.push(item);
     }
+}
+
+pub fn inspect_item(monkey: &Monkey, item: usize) -> (usize, usize) {
+    let worry_level = monkey.operation.apply(item) / RELIEF_FACTOR;
+
+    let dst = if worry_level % monkey.divisor == 0 {
+        monkey.true_dst
+    } else {
+        monkey.false_dst
+    };
+
+    (dst, worry_level)
 }
 
 #[cfg(test)]
@@ -118,6 +123,7 @@ mod tests {
 
     fn make_test_monkey() -> Monkey {
         Monkey {
+            id: 0,
             items: vec![79, 98],
             operation: Operation {
                 operator: Operator::Mult,
@@ -146,11 +152,11 @@ mod tests {
     fn test_monkey_inspect_item() {
         let monkey = make_test_monkey();
 
-        let (dst, worry_level) = monkey.inspect_item(monkey.items[0]);
+        let (dst, worry_level) = inspect_item(&monkey, monkey.items[0]);
         assert_eq!(worry_level, 500);
         assert_eq!(dst, 3);
 
-        let (dst, worry_level) = monkey.inspect_item(monkey.items[1]);
+        let (dst, worry_level) = inspect_item(&monkey, monkey.items[1]);
         assert_eq!(worry_level, 620);
         assert_eq!(dst, 3);
     }
