@@ -11,11 +11,35 @@ pub struct Monkey {
     false_dst: usize,
 }
 
+enum Op {
+    Add,
+    Mult,
+}
+
+struct Operation {
+    op: Op,
+    term: Option<usize>,
+}
+
+impl Operation {
+    fn apply(&self, old: usize) -> usize {
+        let term = match self.term {
+            Some(val) => val,
+            None => old,
+        };
+
+        match self.op {
+            Op::Add => old + term,
+            Op::Mult => old * term,
+        }
+    }
+}
+
 fn parse_monkey(monkey_str: &str) -> Monkey {
     let re = Regex::new(
         r"Monkey (\d+):
   Starting items: (.*)
-  Operation: new = (.*)
+  Operation: (.*)
   Test: divisible by (\d+)
     If true: throw to monkey (\d+)
     If false: throw to monkey (\d+)",
@@ -40,6 +64,20 @@ fn parse_monkey(monkey_str: &str) -> Monkey {
         true_dst: parse_int(&cap[5]),
         false_dst: parse_int(&cap[6]),
     }
+}
+
+fn parse_operation(op_str: &str) -> (String, String) {
+    let re = Regex::new(r"new = old (\+|\*) (.*)").unwrap();
+    let cap = re.captures(op_str).unwrap();
+
+    // match (cap[1], cap[2]) {
+    //     ("+", "old") => |x| x + x,
+    //     ("*", "old") => |x| x * x,
+    //     ("+", _) => |x| x + cap[2].parse::<usize>().unwrap(),
+    //     ("*", _) => |x| x + cap[2].parse::<usize>().unwrap(),
+    // }
+
+    (cap[1].to_string(), cap[2].to_string())
 }
 
 impl Monkey {
@@ -129,5 +167,38 @@ mod tests {
         assert_eq!(monkey.divisor, 11);
         assert_eq!(monkey.true_dst, 3);
         assert_eq!(monkey.false_dst, 4);
+    }
+
+    #[test]
+    fn test_parse_operation() {
+        let op_str = "new = old * 5";
+        let (op, term) = parse_operation(op_str);
+        assert_eq!(op, "*");
+        assert_eq!(term, "5");
+
+        let op_str = "new = old + old";
+        let (op, term) = parse_operation(op_str);
+        assert_eq!(op, "+");
+        assert_eq!(term, "old");
+    }
+
+    fn test_operation() {
+        let operation = Operation {
+            op: Op::Add,
+            term: Some(3),
+        };
+        assert_eq!(operation.apply(4), 7);
+
+        let operation = Operation {
+            op: Op::Mult,
+            term: Some(3),
+        };
+        assert_eq!(operation.apply(4), 12);
+
+        let operation = Operation {
+            op: Op::Mult,
+            term: None,
+        };
+        assert_eq!(operation.apply(4), 16);
     }
 }
