@@ -1,5 +1,6 @@
 use clap::Parser;
 use itertools::Itertools;
+use num::Integer;
 use std::{
     error::Error,
     fs::File,
@@ -8,8 +9,8 @@ use std::{
 
 use day11::parse_monkey;
 
-const N_ROUNDS: usize = 20;
-const RELIEF_FACTOR: usize = 3;
+const N_ROUNDS: usize = 10000;
+const RELIEF_FACTOR: usize = 1;
 
 fn main() {
     if let Err(e) = get_args().and_then(run) {
@@ -36,6 +37,12 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
         .filter_map(|x| parse_monkey(&x).ok())
         .collect::<Vec<_>>();
 
+    let lcm = monkeys
+        .iter()
+        .map(|monkey| monkey.divisor)
+        .reduce(|x, y| x.lcm(&y))
+        .unwrap();
+
     for _ in 0..N_ROUNDS {
         // apply a round of inspection
         for i in 0..monkeys.len() {
@@ -59,9 +66,13 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
                         0 => monkey.true_dst,
                         _ => monkey.false_dst,
                     };
+                    let managed = match new % lcm {
+                        0 => lcm,
+                        _ => new % lcm,
+                    };
                     match dst < i {
-                        true => left[dst].add(new),
-                        false => right[(dst - i - 1)].add(new),
+                        true => left[dst].add(managed),
+                        false => right[(dst - i - 1)].add(managed),
                     }
                 });
         }
