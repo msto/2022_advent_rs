@@ -37,6 +37,8 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
         .filter_map(|x| parse_monkey(&x).ok())
         .collect::<Vec<_>>();
 
+    // compute the lowest common multiple of all monkey divisors.
+    // all worry-level updates will be calculated mod LCM, to prevent overflow
     let lcm = monkeys
         .iter()
         .map(|monkey| monkey.divisor)
