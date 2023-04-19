@@ -110,16 +110,6 @@ impl Monkey {
     }
 }
 
-/// Parse line of input
-pub fn parse_line(line: String) -> Result<Monkey, Box<dyn Error>> {
-    let mut data = line.split_whitespace();
-    let op_name = data.next();
-
-    match op_name {
-        _ => Err("Invalid operation".into()),
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use std::matches;
