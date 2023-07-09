@@ -74,7 +74,7 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
                     };
                     match dst < i {
                         true => left[dst].add(managed),
-                        false => right[(dst - i - 1)].add(managed),
+                        false => right[dst - i - 1].add(managed),
                     }
                 });
         }
